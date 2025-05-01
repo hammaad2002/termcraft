@@ -16,7 +16,7 @@ gsettings set org.gnome.Terminal.Legacy.Settings shortcuts-enabled true
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" default-size-columns 80
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" default-size-rows 24
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" use-system-font false
-gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" font 'DejaVu Sans Mono 12'
+gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" font 'DejaVu Sans Mono for Powerline 12'
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" cell-width-scale 1
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" cell-height-scale 1
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" text-blink-mode 'always'
