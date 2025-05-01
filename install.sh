@@ -1,7 +1,8 @@
 #!/bin/bash
 
 echo "[*] Installing Powerline fonts..."
-bash fonts/install-powerline.sh
+cd fonts
+bash install-powerline.sh
 
 echo "[*] Symlinking dotfiles..."
 ln -sf $(pwd)/tmux/.tmux.conf ~/.tmux.conf
