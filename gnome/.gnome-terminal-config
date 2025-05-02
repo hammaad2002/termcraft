@@ -32,6 +32,8 @@ gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" audible-bell fa
 # Following is my custom scheme [even for pre-exisiting scheme you have to enter every detail here :( ]
 
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" use-theme-colors false
+gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" background-color '#202336'
+gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" foreground-color '#D3D7CF'
 
 # Bold colour settings
 gsettings set "org.gnome.Terminal.Legacy.Profile:$PROFILE_PATH/" bold-color-same-as-fg true # to disable the option
