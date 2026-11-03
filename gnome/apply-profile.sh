@@ -1,4 +1,13 @@
+#!/usr/bin/env bash
+# Applies the termcraft look to your *default* GNOME Terminal profile.
+# Safe to re-run. No `set -e` on purpose: a key missing on an older GNOME
+# should not stop the remaining settings from being applied.
+
 PROFILE_ID=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')
+if [ -z "$PROFILE_ID" ]; then
+    echo "Could not find a default GNOME Terminal profile, nothing to do." >&2
+    exit 1
+fi
 PROFILE_PATH="/org/gnome/terminal/legacy/profiles:/:$PROFILE_ID"
 
 # Naming my profile
