@@ -1,0 +1,11 @@
+{
+  "name": "termcraft",
+  "owner": { "name": "hammaad2002" },
+  "plugins": [
+    {
+      "name": "usage-weather",
+      "source": "./usage-weather",
+      "description": "Context window and rate-limit usage as a weather forecast"
+    }
+  ]
+}

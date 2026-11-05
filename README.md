@@ -1,6 +1,6 @@
 # termcraft
 
-My terminal setup: **tmux**, **Vim** and **GNOME Terminal**, with Powerline fonts, a status bar that shows CPU/GPU temperatures, and a clickable "mood" indicator. One script installs all of it.
+My terminal setup: **tmux**, **Vim** and **GNOME Terminal**, with Powerline fonts, a status bar that shows CPU/GPU temperatures, a clickable "mood" indicator, and a **Claude Code** mod that shows your usage as a weather forecast. One script installs all of it.
 
 ![tmux with Vim + NERDTree, a sensors pane and a git log pane](assets/tmux-overview.png)
 
@@ -16,6 +16,7 @@ My terminal setup: **tmux**, **Vim** and **GNOME Terminal**, with Powerline font
 - [Vim](#vim)
 - [GNOME Terminal profile](#gnome-terminal-profile)
 - [Fonts](#fonts)
+- [Claude Code: usage-weather mod](#claude-code-usage-weather-mod)
 - [Customising](#customising)
 - [Uninstalling](#uninstalling)
 - [Troubleshooting](#troubleshooting)
@@ -32,6 +33,7 @@ My terminal setup: **tmux**, **Vim** and **GNOME Terminal**, with Powerline font
 | Vim | [`vim/.vimrc`](vim/.vimrc) | Relative line numbers, an always-visible status line, a "copy selection to clipboard" mapping, and [vim-plug](https://github.com/junegunn/vim-plug), which installs itself and [NERDTree](https://github.com/preservim/nerdtree) on first launch. |
 | GNOME Terminal | [`gnome/apply-profile.sh`](gnome/apply-profile.sh) | Sets your default GNOME Terminal profile's font, colours, palette, cursor, scrollback and other settings using `gsettings`. |
 | Fonts | [`fonts/install-powerline.sh`](fonts/install-powerline.sh) | Installs the [Powerline-patched fonts](https://github.com/powerline/fonts). These provide the arrow glyphs used in the status bar. |
+| Claude Code | [`claude/usage-weather/`](claude/usage-weather) | A Claude Code mod that shows your context window and 5-hour / 7-day rate-limit usage as a weather forecast above the prompt. |
 | Installer | [`install.sh`](install.sh) | Runs all of the above, with backups. |
 
 ## Requirements
@@ -40,6 +42,7 @@ My terminal setup: **tmux**, **Vim** and **GNOME Terminal**, with Powerline font
 - **GNOME Terminal**, for the profile step. With any other terminal, that step is skipped and everything else still works, but you have to choose a Powerline font in your terminal yourself.
 - **An X11 session**, for clipboard integration (`xclip`). See [Troubleshooting](#troubleshooting) if you're on Wayland.
 - `sudo`, to install packages.
+- *Optional:* [**Claude Code**](https://claude.com/claude-code), for the usage-weather mod. Without it, that step is skipped.
 - *Optional:* an **NVIDIA GPU** with `nvidia-smi`, for the GPU temperature. Without one, the status bar shows `N/A`.
 
 ## Quick start
@@ -68,7 +71,8 @@ You can run it from any directory, and running it again is safe.
 
    If a real file (or a different symlink) already exists there, it is **moved to `~/.termcraft-backup/<timestamp>/`** first. Nothing is deleted.
 4. **Applies the GNOME Terminal profile** by running `gnome/apply-profile.sh`. It skips this if GNOME Terminal isn't installed.
-5. **Reloads tmux**, but only if a tmux server is already running.
+5. **Installs the usage-weather Claude Code mod**, if the `claude` command is available and the mod isn't installed already. See [below](#claude-code-usage-weather-mod).
+6. **Reloads tmux**, but only if a tmux server is already running.
 
 Because the dotfiles are symlinks, a `git pull` in this repo updates your setup straight away. In tmux, press `prefix` + `r` to reload.
 
@@ -181,6 +185,54 @@ bash gnome/apply-profile.sh
 
 ---
 
+## Claude Code: usage-weather mod
+
+A [Claude Code](https://claude.com/claude-code) mod that adds a dim line above the prompt showing how much of your context window and rate limits you've used, as a weather forecast:
+
+```
+● Context: ☀️ Sunny 12%  │  5h: ⛅ Partly cloudy 41% clears in 2h13m  │  7d: ☁️ Overcast 63% clears in 74h5m
+```
+
+| Usage | Forecast |
+|---|---|
+| under 30% | ☀️ Sunny |
+| 30–54% | ⛅ Partly cloudy |
+| 55–74% | ☁️ Overcast |
+| 75–89% | 🌧️ Rain |
+| 90% and up | ⛈️ Storm |
+
+- **Context** is how full the current session's context window is.
+- **5h** and **7d** are your rolling 5-hour and 7-day rate limits. "clears in …" counts down, second by second, to when that window resets.
+- A leading **●** means the figures are *live*. Every 10 seconds the mod asks Anthropic's usage endpoint for your account-wide usage, which includes your other sessions. Until the first answer arrives (or if the endpoint never answers), it shows the figures from this session's own last response instead, without the dot. Once it has a live answer, a failed poll just keeps the last live figures.
+
+> The live figures come from `https://api.anthropic.com/api/oauth/usage`, an **undocumented** endpoint, using your Claude Code login. It may change or disappear without notice. If it does, the mod quietly falls back to this session's own figures.
+
+### Installing it
+
+`install.sh` does this for you. To do it by hand:
+
+```bash
+claude plugin marketplace add ./claude        # this repo's claude/ folder is a plugin marketplace called "termcraft"
+claude plugin install usage-weather@termcraft
+```
+
+Then start a new Claude Code session. If you use several Claude Code config directories, run these commands once for each of them with `CLAUDE_CONFIG_DIR=<dir>` set.
+
+### Files
+
+| File | What it is |
+|---|---|
+| [`claude/.claude-plugin/marketplace.json`](claude/.claude-plugin/marketplace.json) | Makes `claude/` a marketplace that lists the mod |
+| [`claude/usage-weather/.claude-plugin/plugin.json`](claude/usage-weather/.claude-plugin/plugin.json) | The mod's manifest (name, version, description) |
+| [`claude/usage-weather/hooks/register.tsx`](claude/usage-weather/hooks/register.tsx) | All of the logic: reads usage, polls the endpoint, draws the forecast line |
+| [`claude/usage-weather/types/index.d.ts`](claude/usage-weather/types/index.d.ts) | Types for the mod's saved reading |
+
+`tsconfig.json` extends type definitions that Claude Code generates into `.claude-plugin/types/` while you develop a mod. Those are gitignored, so type-checking only works after Claude Code has generated them.
+
+After editing the mod, bump `version` in `plugin.json`, then run `claude plugin marketplace update termcraft` and `claude plugin install usage-weather@termcraft`, and start a new session.
+
+---
+
 ## Customising
 
 Your dotfiles are symlinks into this repo, so edit the files here and reload.
@@ -218,12 +270,16 @@ cp -a ~/.termcraft-backup/<timestamp>/. ~/
 PROFILE_ID=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d \')
 dconf reset -f "/org/gnome/terminal/legacy/profiles:/:$PROFILE_ID/"
 
-# 4. (Optional) Remove the vim-plug files and the fonts
+# 4. Remove the Claude Code mod
+claude plugin uninstall usage-weather@termcraft
+claude plugin marketplace remove termcraft
+
+# 5. (Optional) Remove the vim-plug files and the fonts
 rm -rf ~/.vim/plugged ~/.vim/autoload/plug.vim
 rm -f ~/.local/share/fonts/*Powerline* && fc-cache -f
 ```
 
-Step 4's font command removes *all* fonts with "Powerline" in their name, including any you installed some other way.
+Step 5's font command removes *all* fonts with "Powerline" in their name, including any you installed some other way.
 
 ---
 
@@ -265,6 +321,8 @@ termcraft/
 │   └── .tmux.conf             # → ~/.tmux.conf
 ├── vim/
 │   └── .vimrc                 # → ~/.vimrc
+├── claude/                    # Claude Code plugin marketplace ("termcraft")
+│   └── usage-weather/         # the usage-weather mod
 ├── assets/                    # screenshots used in this README
 └── LICENSE
 ```

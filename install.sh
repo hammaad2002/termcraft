@@ -52,6 +52,16 @@ else
     echo "    GNOME Terminal not found, skipping"
 fi
 
+echo "[*] Installing the usage-weather Claude Code mod..."
+if ! command -v claude >/dev/null 2>&1; then
+    echo "    Claude Code not found, skipping"
+elif claude plugin list 2>/dev/null | grep -q 'usage-weather@'; then
+    echo "    usage-weather is already installed, skipping"
+else
+    claude plugin marketplace add "$REPO_DIR/claude"
+    claude plugin install usage-weather@termcraft
+fi
+
 if tmux has-session 2>/dev/null; then
     echo "[*] Reloading running tmux server..."
     tmux source-file "$HOME/.tmux.conf"
